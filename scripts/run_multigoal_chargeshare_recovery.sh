@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+export LD_LIBRARY_PATH="${MUJOCO210_BIN:-$HOME/.mujoco/mujoco210/bin}:/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+
+COMMON_ENV=(
+  SAFE_FAIR_QUICK_TEST=0
+  SAFE_FAIR_RUN_TRAINING=1
+  SAFE_FAIR_RUN_EVALUATION=1
+  SAFE_FAIR_CLONE_OFFICIAL_REPOS=0
+  SAFE_FAIR_USE_CUDA=1
+  SAFE_FAIR_RUN_GROUP_FILTER=main
+  SAFE_FAIR_METHOD_FILTER=safe_fair_macpo
+  SAFE_FAIR_SEED_FILTER=0
+  SAFE_FAIR_CFG_TOTAL_STEPS=180000
+  SAFE_FAIR_CFG_ROLLOUT_STEPS=2048
+  SAFE_FAIR_CFG_PPO_EPOCHS=8
+  SAFE_FAIR_CFG_MINIBATCH_SIZE=512
+  SAFE_FAIR_CFG_EVAL_EPISODES=12
+  SAFE_FAIR_CFG_ENTROPY_COEF=0.003
+  SAFE_FAIR_CFG_INIT_LAMBDA_SAFETY=0.5
+  SAFE_FAIR_CFG_SAFETY_DUAL_LR=0.25
+  SAFE_FAIR_CFG_MAX_LAMBDA_SAFETY=20
+  SAFE_FAIR_CFG_SAFETY_TARGET_SCALE=0.35
+  SAFE_FAIR_CFG_FAIRNESS_WARMUP_UPDATES=18
+  SAFE_FAIR_CFG_FAIRNESS_SAFETY_MARGIN=0.01
+  SAFE_FAIR_CFG_FAIRNESS_BUDGET_SCALE_INIT=3.0
+  SAFE_FAIR_CFG_FAIRNESS_BUDGET_RAMP_UPDATES=24
+  SAFE_FAIR_CFG_FAIRNESS_DUAL_LR=0.02
+)
+
+run_task() {
+  local task="$1"
+  local tag="$2"
+  echo "==== RUN ${task} ${tag}"
+  env "${COMMON_ENV[@]}" \
+    SAFE_FAIR_TASK_FILTER="${task}" \
+    SAFE_FAIR_CFG_RUN_TAG="${tag}" \
+    .venv-sg/bin/python codes/safe_fair_macpo_experiments.py
+}
+
+run_task "safetygym_point_multigoal1_fair" "repair_audit"
+run_task "safetygym_chargeshare_fair" "repair_audit"

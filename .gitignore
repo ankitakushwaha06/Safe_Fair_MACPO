@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Local environments and tooling
+.venv*/
+.coverage
+.idea/
+.vscode/
+
+# Generated experiment artifacts
+safe_fair_macpo_runs/
+vendor/
+*.log
+*.pid
+
+# Operating-system files
+.DS_Store

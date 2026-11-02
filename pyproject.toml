@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "safe-fair-macpo"
+version = "1.0.0"
+description = "Reproducibility code for constrained multi-agent reinforcement learning with long-horizon burden fairness."
+authors = [
+  {name = "Ankita Kushwaha"},
+  {name = "Kiran Ravish"},
+  {name = "Preeti"},
+  {name = "Pawan Kumar"},
+]
+readme = "README.md"
+requires-python = ">=3.10,<3.12"
+license = {file = "LICENSE"}
+dependencies = [
+  "matplotlib==3.7.5",
+  "numpy==1.23.5",
+  "pandas==2.1.4",
+  "PyYAML==6.0.2",
+  "tqdm==4.67.3",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.8"]
+
+[project.scripts]
+safe-fair-macpo = "safe_fair_macpo.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.pytest.ini_options]
+addopts = "-q"
+pythonpath = ["src"]
+testpaths = ["tests"]

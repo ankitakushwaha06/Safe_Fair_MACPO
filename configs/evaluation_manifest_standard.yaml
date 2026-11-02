@@ -1,0 +1,67 @@
+eval_many_seeds:
+  episodes: 20
+  eval_seeds: [0,1,2,3,4]
+  stress_modes: [standard, fairness_stress]
+  checkpoints:
+    - name: sg_multigoal_sf_500k
+      env: safetygym_point_multigoal1_fair
+      method: safe_fair_macpo
+      run_tag: extended_benchmark_500k_promotion_mg_loose_s0
+      stress_modes: [standard, fairness_stress]
+    - name: sg_multigoal_ippo_500k
+      env: safetygym_point_multigoal1_fair
+      method: ippo
+      run_tag: ippo_clean
+      stress_modes: [standard, fairness_stress]
+    - name: sg_multigoal_reward_shaped_180k
+      env: safetygym_point_multigoal1_fair
+      method: reward_shaped_macpo_fair
+      run_tag: review_mg_rsmacpo_s0
+      stress_modes: [standard, fairness_stress]
+    - name: sg_chargeshare_sf_500k
+      env: safetygym_chargeshare_fair
+      method: safe_fair_macpo
+      run_tag: extended_benchmark_500k_promotion_cs_sweet_a_500k_s0
+      stress_modes: [standard, fairness_stress]
+    - name: sg_chargeshare_ippo_500k
+      env: safetygym_chargeshare_fair
+      method: ippo
+      run_tag: ippo_clean
+      stress_modes: [standard, fairness_stress]
+    - name: vmas_multigoal_sf_projection
+      env: safefairbench_vmas_multigoal
+      method: safe_fair_macpo
+      run_tag: mg_zero_safety_projection_s2048_r256
+      stress_modes: [standard, fairness_stress]
+    - name: highway_fair_assist
+      env: safefairbench_highway_merge
+      method: safe_fair_macpo
+      run_tag: highway_fair_assist_sf_s4096
+      stress_modes: [standard, fairness_stress]
+
+training_sweeps:
+  - name: mg_fairness_budget_sweep
+    env: safetygym_point_multigoal1_fair
+    algo: sfmacpo
+    total_steps: 180000
+    seeds: [0,1,2]
+    fairness_budgets: [2.5,3.5,5.0,8.0,inf]
+
+  - name: vmas_multigoal_attribution
+    env: safefairbench_vmas_multigoal
+    algos: [sfmacpo, macpo_recovery, mappo_lag_recovery]
+    total_steps: [2048,8192]
+    seeds: [0,1,2,3,4,5,6,7,8,9]
+
+  - name: highway_multiseed_support
+    env: safefairbench_highway_merge
+    variants: [sfmacpo_fair_assist, safety_slot_control, immediate_recovery]
+    total_steps: 4096
+    seeds: [0,1,2,3,4,5,6,7,8,9]
+
+  - name: chargeshare_frontier
+    env: safetygym_chargeshare_fair
+    algo: sfmacpo
+    total_steps: 300000
+    seeds: [0,1,2]
+    fairness_budgets: [3.5,4.5,5.5,7.0,inf]
