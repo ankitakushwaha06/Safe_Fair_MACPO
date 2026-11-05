@@ -87,7 +87,7 @@ def main() -> None:
         "safety_gymnasium/tasks/safe_multi_agent/assets/mocaps/gremlins.py",
     ]:
         changed += int(patch_file(SAFETY_GYM_ROOT / rel))
-    print(f"Patched {changed} Safety-Gymnasium files for Python 3.11 dataclass compatibility.")
+    print(f"Patched {changed} Safety-Gymnasium files for mutable dataclass defaults.")
 
 
 if __name__ == "__main__":

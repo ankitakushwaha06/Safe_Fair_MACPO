@@ -12,7 +12,7 @@ This code release intentionally excludes generated results, checkpoints, simulat
 - `src/safe_fair_macpo/` — small installed package and command-line interface.
 - `scripts/` — non-interactive environment setup and experiment launchers.
 - `codes/` — evaluation, auditing, confidence-interval, and plotting utilities.
-- `configs/` — fixed evaluation manifests used by the long-run workflows.
+- `configs/` — fixed evaluation configurations used by the long-run workflows.
 - `tests/` — fast unit tests for orchestration and artifact reporting.
 
 ## Architecture
@@ -23,7 +23,7 @@ This code release intentionally excludes generated results, checkpoints, simulat
 
 ## Requirements
 
-The supported setup is Linux with Python 3.10 or 3.11. Full MuJoCo experiments require a CUDA-capable machine, the simulator dependencies installed below, and enough storage for checkpoints. The built-in smoke environment can run on CPU and does not require external repositories.
+The supported setup is Linux with Python 3.8 or 3.9. Full MuJoCo experiments require a CUDA-capable machine, the simulator dependencies installed below, and enough storage for checkpoints. The built-in smoke environment can run on CPU and does not require external repositories.
 
 The paper environment uses PyTorch 2.4.1. PyTorch is installed separately so that the CPU or CUDA wheel can be selected explicitly; all remaining Python dependencies are pinned in `requirements.txt` and `pyproject.toml`.
 
@@ -45,7 +45,7 @@ SAFE_FAIR_TORCH_INDEX_URL=https://download.pytorch.org/whl/cu124 \
 source .venv-sg/bin/activate
 ```
 
-To use a different virtualenv location, set `SAFE_FAIR_VENV_DIR` consistently for setup and launch commands. If `uv` is unavailable, set `SAFE_FAIR_PYTHON_BIN` to a Python 3.10+ interpreter.
+To use a different virtualenv location, set `SAFE_FAIR_VENV_DIR` consistently for setup and launch commands. If `uv` is unavailable, set `SAFE_FAIR_PYTHON_BIN` to a Python 3.8 or 3.9 interpreter.
 
 For full benchmark runs, install the pinned Safety-Gymnasium and MuJoCo dependencies:
 
@@ -119,7 +119,7 @@ Evaluate fixed checkpoints across seeds and stress modes:
 
 ```bash
 python codes/eval_many_seeds.py \
-  --manifest configs/evaluation_manifest_standard.yaml \
+  --manifest configs/evaluation_standard.yaml \
   --episodes 100 \
   --eval-seeds 0 1 2 3 4 5 6 7 8 9 \
   --out safe_fair_macpo_runs/tables/many_seed_eval.csv
@@ -133,7 +133,7 @@ python codes/bootstrap_eval_ci.py \
   --out safe_fair_macpo_runs/tables/eval_ci.csv
 
 python codes/collect_burden_decomposition.py \
-  --manifest configs/evaluation_manifest_standard.yaml \
+  --manifest configs/evaluation_standard.yaml \
   --episodes 50 \
   --eval-seeds 0 1 2 3 4 \
   --out safe_fair_macpo_runs/tables/burden_decomposition.csv \

@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-PYTHON_VERSION="${SAFE_FAIR_PYTHON_VERSION:-3.11}"
+PYTHON_VERSION="${SAFE_FAIR_PYTHON_VERSION:-3.9}"
 VENV_DIR="${SAFE_FAIR_VENV_DIR:-.venv-sg}"
 TORCH_INDEX_URL="${SAFE_FAIR_TORCH_INDEX_URL:-https://download.pytorch.org/whl/cpu}"
 TORCH_PACKAGE_SPEC="${SAFE_FAIR_TORCH_PACKAGE_SPEC:-torch==2.4.1}"

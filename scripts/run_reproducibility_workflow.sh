@@ -6,7 +6,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "${ROOT_DIR}/scripts/_external_baseline_env.sh"
 
 PYTHON_BIN="${ROOT_DIR}/.venv-sg/bin/python"
-MANIFEST="${SAFE_FAIR_EVALUATION_MANIFEST:-${ROOT_DIR}/configs/evaluation_manifest_standard.yaml}"
+MANIFEST="${SAFE_FAIR_EVALUATION_MANIFEST:-${ROOT_DIR}/configs/evaluation_standard.yaml}"
 RUN_ROOT="${ROOT_DIR}/safe_fair_macpo_runs"
 QUEUE_DIR="${RUN_ROOT}/logs/queue"
 RUN_ID="${SAFE_FAIR_REPRODUCIBILITY_RUN_ID:-reproducibility_workflow_$(date -u +%Y%m%d_%H%M%S)}"
