@@ -1,0 +1,95 @@
+# Frozen camera-ready workflow and result-selection manifest.
+version: 1
+release: neurips-2026-camera-ready-v1
+training_seeds: [0, 1, 2, 3, 4]
+
+workflows:
+  main_comparison:
+    command: scripts/run/run_main_comparison.sh
+    run_id: paper_main_v1
+  ablations:
+    command: scripts/run/run_ablations.sh
+    run_id: paper_ablations_v1
+  long_budget:
+    command: scripts/run/run_long_budget.sh
+    run_id: paper_long_budget_v1
+  recovery_controls:
+    command: scripts/run/run_recovery_controls.sh
+    run_id: paper_recovery_controls_v1
+  workload_diagnostics:
+    command: scripts/run/run_workload_study.sh
+    run_id: paper_workload_v1
+
+# A result is publication-eligible only when all five fields below match an
+# artifact exactly. Add rows here deliberately; reporters never pick "latest".
+selected_runs:
+  - task: smamujoco_halfcheetah_2x3_fair
+    method: safe_fair_macpo
+    run_group: main
+    seeds: [0, 1, 2, 3, 4]
+    run_tag: paper_main_v1_180k_base_smamujoco_halfcheetah_2x3_fair_safe_fair_macpo_hc_pareto_d_s{seed}
+  - task: smamujoco_halfcheetah_2x3_fair
+    method: reward_shaped_macpo_fair
+    run_group: main
+    seeds: [0, 1, 2, 3, 4]
+    run_tag: paper_main_v1_180k_baseline_smamujoco_halfcheetah_2x3_fair_reward_shaped_macpo_fair_clean_s{seed}
+  - task: safetygym_point_multigoal1_fair
+    method: safe_fair_macpo
+    run_group: main
+    seeds: [0, 1, 2, 3, 4]
+    run_tag: paper_main_v1_500k_confirm_safetygym_point_multigoal1_fair_safe_fair_macpo_mg_loose_s{seed}
+  - task: safetygym_chargeshare_fair
+    method: safe_fair_macpo
+    run_group: main
+    seeds: [0, 1, 2, 3, 4]
+    run_tag: paper_main_v1_500k_confirm_safetygym_chargeshare_fair_safe_fair_macpo_cs_sweet_a_500k_s{seed}
+  - task: safefairbench_vmas_multigoal
+    method: safe_fair_macpo
+    run_group: safefairbench
+    seeds: [0, 1, 2, 3, 4]
+    run_tag: paper_main_v1_sfb_confirm_safefairbench_vmas_multigoal_safe_fair_macpo_mg_zero_safety_projection_s{seed}
+
+  - task: safefairbench_vmas_chargeshare
+    method: macpo_recovery
+    run_group: safefairbench
+    seeds: [0, 1, 2, 3, 4]
+    run_tag: cs_route_a_control_s4096
+  - task: safefairbench_highway_merge
+    method: macpo_recovery
+    run_group: safefairbench
+    seeds: [0, 1, 2, 3, 4]
+    run_tag: highway_early_a_control_s4096
+
+selected_matrices:
+  - tasks: [safefairbench_vmas_multigoal, safefairbench_vmas_chargeshare, safefairbench_pogema_warehouse, safefairbench_highway_merge]
+    methods: [safe_fair_macpo, safe_fair_no_debt, safe_fair_no_hazard_burden, safe_fair_no_contested_access_burden, safe_fair_no_yield_burden, safe_fair_jain_only, safe_fair_envy_only, safe_fair_scalar_critic, safe_fair_per_agent_critic]
+    seeds: [0, 1, 2, 3, 4]
+    run_group: safefairbench_ablation
+    run_tag: paper_ablations_v1
+
+paper_outputs:
+  main_table:
+    launcher: scripts/run/run_main_comparison.sh
+    configuration: configs/release_runs.yaml
+    evaluator: scripts/evaluate/evaluate_checkpoints.py
+    reporter: scripts/report/generate_tables.py
+  ablation_table:
+    launcher: scripts/run/run_ablations.sh
+    configuration: configs/release_runs.yaml
+    evaluator: scripts/evaluate/evaluate_checkpoints.py
+    reporter: scripts/report/generate_tables.py
+  long_budget_table:
+    launcher: scripts/run/run_long_budget.sh
+    configuration: configs/release_runs.yaml
+    evaluator: scripts/evaluate/evaluate_checkpoints.py
+    reporter: scripts/report/generate_tables.py
+  recovery_control_table:
+    launcher: scripts/run/run_recovery_controls.sh
+    configuration: configs/release_runs.yaml
+    evaluator: scripts/evaluate/evaluate_checkpoints.py
+    reporter: scripts/report/generate_tables.py
+  workload_figure:
+    launcher: scripts/run/run_workload_study.sh
+    configuration: configs/release_runs.yaml
+    evaluator: scripts/evaluate/evaluate_checkpoints.py
+    reporter: scripts/report/generate_figures.py

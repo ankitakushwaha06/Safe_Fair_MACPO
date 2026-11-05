@@ -10,9 +10,14 @@ This code release intentionally excludes generated results, checkpoints, simulat
 
 - `codes/safe_fair_macpo_experiments.py` — trainer, task and method registries, fair-burden wrappers, evaluation, and manifest generation.
 - `src/safe_fair_macpo/` — small installed package and command-line interface.
-- `scripts/` — non-interactive environment setup and experiment launchers.
+- `scripts/run/` — the five supported camera-ready experiment launchers.
+- `scripts/evaluate/` — checkpoint evaluation and result auditing.
+- `scripts/report/` — final table, figure, and computational-cost reporting.
+- `scripts/setup/` — environment and external-source setup.
+- `scripts/internal/` — helpers used by the public commands.
+- `scripts/archive/` — exploratory, superseded, seed-0, and unused-baseline workflows retained for history.
 - `codes/` — evaluation, auditing, confidence-interval, and plotting utilities.
-- `configs/` — fixed evaluation configurations used by the long-run workflows.
+- `configs/release_runs.yaml` — frozen workflow IDs, seed set, run selection, and output mapping.
 - `tests/` — fast unit tests for orchestration and artifact reporting.
 
 ## Architecture
@@ -32,7 +37,7 @@ The paper environment uses PyTorch 2.4.1. PyTorch is installed separately so tha
 Create a CPU environment for validation:
 
 ```bash
-./scripts/bootstrap_env.sh
+./scripts/setup/bootstrap_env.sh
 source .venv-sg/bin/activate
 ```
 
@@ -41,7 +46,7 @@ For CUDA 12.4, create the same environment with the matching PyTorch wheel:
 ```bash
 SAFE_FAIR_TORCH_PACKAGE_SPEC=torch==2.4.1 \
 SAFE_FAIR_TORCH_INDEX_URL=https://download.pytorch.org/whl/cu124 \
-./scripts/bootstrap_env.sh
+./scripts/setup/bootstrap_env.sh
 source .venv-sg/bin/activate
 ```
 
@@ -50,7 +55,7 @@ To use a different virtualenv location, set `SAFE_FAIR_VENV_DIR` consistently fo
 For full benchmark runs, install the pinned Safety-Gymnasium and MuJoCo dependencies:
 
 ```bash
-./scripts/install_simulator_dependencies.sh
+./scripts/setup/install_simulator_dependencies.sh
 ```
 
 This network-enabled installer checks out Safety-Gymnasium at commit `ae966e511b9927f06b39c727ca5c650136a4e696`, verifies the exact revision, and stores it under the ignored `vendor/` directory. Other upstream baseline repositories are fetched only when `--clone-sources` is passed explicitly; all default CLI commands remain offline-safe.
@@ -60,7 +65,7 @@ This network-enabled installer checks out Safety-Gymnasium at commit `ae966e511b
 Generate lightweight experiment and environment manifests without training or network access:
 
 ```bash
-./scripts/run_dry_run.sh --cpu
+./scripts/smoke_test.sh
 safe-fair-macpo status
 safe-fair-macpo paper-matrix
 ```
@@ -79,47 +84,37 @@ safe-fair-macpo train-quick --cpu
 
 ## Reproducing the experiments
 
-Generate the complete experiment matrix after installing the simulator stack:
+The supported public interface is five launchers. Comparison workflows use all declared training seeds (`0 1 2 3 4`) by default:
 
 ```bash
-./scripts/generate_experiment_manifest.sh --clone-sources
+./scripts/run/run_main_comparison.sh
+./scripts/run/run_ablations.sh
+./scripts/run/run_long_budget.sh
+./scripts/run/run_recovery_controls.sh
+./scripts/run/run_workload_study.sh
 ```
 
-The principal paper workflows are:
+Exact workflow IDs, seed declarations, and publication-eligible run tags are frozen in `configs/release_runs.yaml`. Environment overrides are useful for debugging, but an overridden run is not selected until its exact identity is deliberately added to the manifest.
 
-```bash
-# Main seed-0 comparison and unconfounded controls
-./scripts/run_seed0_core_matrix.sh
-./scripts/run_unconfounded_baselines_seed0.sh
+Long-running launchers are restartable at the artifact level: completed run directories remain under `safe_fair_macpo_runs/logs/`. Run scripts from the repository root and do not combine rows from different code revisions in one result table. Archived tuning, finetuning, seed-0, HAPPO, HATRPO, MAT, and MAFOCOPS workflows are retained under `scripts/archive/` but are not part of the camera-ready interface.
 
-# Multi-seed promoted configurations and reproducibility evaluation
-./scripts/run_multiseed_benchmark.sh
-./scripts/run_reproducibility_workflow.sh
+## Paper-output mapping
 
-# SafeFairBench tasks and matched controls
-./scripts/run_safefairbench_core_matrix.sh
-./scripts/run_safefairbench_ablations.sh
-./scripts/run_safefairbench_matched_recovery_controls.sh
-
-# Workload-imbalance diagnostic
-./scripts/run_workload_imbalance_study.sh
-```
-
-Long-running launchers are restartable at the artifact level: completed run directories remain under `safe_fair_macpo_runs/logs/`, and summaries can be regenerated from those logs. Run scripts from the repository root and do not combine rows from different code revisions in one result table.
-
-The task/method matrix and seed counts can be inspected at any time with:
-
-```bash
-safe-fair-macpo paper-matrix
-```
+| Paper output | Launcher | Frozen configuration | Evaluator | Reporter |
+| --- | --- | --- | --- | --- |
+| Main comparison table | `scripts/run/run_main_comparison.sh` | `configs/release_runs.yaml` | `scripts/evaluate/evaluate_checkpoints.py` | `scripts/report/generate_tables.py` |
+| Ablation table | `scripts/run/run_ablations.sh` | `configs/release_runs.yaml` | `scripts/evaluate/evaluate_checkpoints.py` | `scripts/report/generate_tables.py` |
+| Long-budget table | `scripts/run/run_long_budget.sh` | `configs/release_runs.yaml` | `scripts/evaluate/evaluate_checkpoints.py` | `scripts/report/generate_tables.py` |
+| Recovery-control table | `scripts/run/run_recovery_controls.sh` | `configs/release_runs.yaml` | `scripts/evaluate/evaluate_checkpoints.py` | `scripts/report/generate_tables.py` |
+| Workload diagnostic figure | `scripts/run/run_workload_study.sh` | `configs/release_runs.yaml` | `scripts/evaluate/evaluate_checkpoints.py` | `scripts/report/generate_figures.py` |
 
 ## Evaluation and uncertainty
 
-Evaluate fixed checkpoints across seeds and stress modes:
+Evaluate fixed terminal checkpoints across seeds and declared stress modes:
 
 ```bash
-python codes/eval_many_seeds.py \
-  --manifest configs/evaluation_standard.yaml \
+python scripts/evaluate/evaluate_checkpoints.py \
+  --manifest configs/evaluation_full.yaml \
   --episodes 100 \
   --eval-seeds 0 1 2 3 4 5 6 7 8 9 \
   --out safe_fair_macpo_runs/tables/many_seed_eval.csv
@@ -143,23 +138,18 @@ python codes/collect_burden_decomposition.py \
 Audit result provenance before producing paper tables:
 
 ```bash
-python codes/recompute_burden_summaries.py
-python codes/audit_result_integrity.py
+python scripts/evaluate/audit_results.py
 ```
 
 ## Tables and figures
 
-Regenerate aggregate tables and the safe/fair frontier from current local results:
-
 ```bash
-python scripts/regenerate_result_tables.py
-python scripts/generate_500k_comparison_table.py
-python codes/plot_safe_fair_frontiers.py \
-  --inputs safe_fair_macpo_runs/tables/main_results.csv \
-           safe_fair_macpo_runs/tables/all_eval_rows_current.csv \
-           safe_fair_macpo_runs/tables/ablation_results.csv \
-  --out-dir safe_fair_macpo_runs/figures/frontiers
+python scripts/report/generate_tables.py --require-complete
+python scripts/report/generate_figures.py
+python scripts/report/summarize_computational_cost.py
 ```
+
+These reporters select exact `(task, method, seed, run_group, run_tag)` identities. Duplicate identities are errors; file modification time is never a selection criterion. Archived exploratory checkpoint selection may compare intermediate checkpoints, while camera-ready comparisons use the terminal checkpoint named by the frozen identity. Do not combine those protocols.
 
 ## Citation
 

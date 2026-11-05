@@ -102,14 +102,19 @@ def find_run(item: Dict[str, Any]) -> Optional[Path]:
         if method and method_obj.get("name") != method:
             continue
         cfg_tag = str(cfg.get("run_tag", ""))
-        if tag and tag != cfg_tag and tag not in cfg_tag:
+        if tag and tag != cfg_tag:
             continue
         if not (cfg_path.parent / "eval_summary.json").exists():
             continue
         candidates.append(cfg_path)
     if not candidates:
         return None
-    candidates.sort(key=lambda p: ((p.parent / "model.pt").exists(), p.stat().st_mtime), reverse=True)
+    if len(candidates) > 1:
+        rendered = ", ".join(display_path(path.parent) for path in candidates)
+        raise RuntimeError(
+            f"manifest entry is ambiguous for env={task!r} method={method!r} "
+            f"run_tag={tag!r}: {rendered}"
+        )
     return candidates[0]
 
 

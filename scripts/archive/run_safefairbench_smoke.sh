@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+PYTHON_BIN="${ROOT_DIR}/.venv-sg/bin/python"
+BACKEND_SCRIPT="${ROOT_DIR}/codes/safe_fair_macpo_experiments.py"
+STATUS_SCRIPT="${ROOT_DIR}/scripts/internal/summarize_safefairbench_status.py"
+RUN_ROOT="${ROOT_DIR}/safe_fair_macpo_runs"
+
+if [[ ! -x "${PYTHON_BIN}" ]]; then
+  echo "Missing Python interpreter: ${PYTHON_BIN}" >&2
+  exit 1
+fi
+
+export SAFE_FAIR_MACPO_ROOT="${RUN_ROOT}"
+export SAFE_FAIR_INCLUDE_SAFEFAIRBENCH=1
+export SAFE_FAIR_QUICK_TEST=1
+export SAFE_FAIR_RUN_TRAINING=1
+export SAFE_FAIR_CLONE_OFFICIAL_REPOS=0
+export SAFE_FAIR_RUN_EVALUATION=1
+export SAFE_FAIR_USE_CUDA="${SAFE_FAIR_USE_CUDA:-0}"
+export SAFE_FAIR_RUN_GROUP_FILTER="safefairbench"
+export SAFE_FAIR_CFG_TOTAL_STEPS="${SAFE_FAIR_CFG_TOTAL_STEPS:-4}"
+export SAFE_FAIR_CFG_ROLLOUT_STEPS="${SAFE_FAIR_CFG_ROLLOUT_STEPS:-4}"
+export SAFE_FAIR_CFG_PPO_EPOCHS="${SAFE_FAIR_CFG_PPO_EPOCHS:-1}"
+export SAFE_FAIR_CFG_MINIBATCH_SIZE="${SAFE_FAIR_CFG_MINIBATCH_SIZE:-4}"
+export SAFE_FAIR_CFG_EVAL_EPISODES="${SAFE_FAIR_CFG_EVAL_EPISODES:-1}"
+export SAFE_FAIR_CFG_RUN_TAG="${SAFE_FAIR_CFG_RUN_TAG:-safefairbench_smoke}"
+
+TASKS=(
+  "safefairbench_vmas_multigoal"
+  "safefairbench_vmas_chargeshare"
+  "safefairbench_pogema_warehouse"
+  "safefairbench_highway_merge"
+)
+
+METHODS=(
+  "mappo"
+  "safe_fair_macpo"
+)
+
+for task in "${TASKS[@]}"; do
+  for method in "${METHODS[@]}"; do
+    start_ts="$(date +%s)"
+    echo "==== SMOKE ${task} / ${method} / seed0 ===="
+    SAFE_FAIR_TASK_FILTER="${task}" SAFE_FAIR_METHOD_FILTER="${method}" "${PYTHON_BIN}" "${BACKEND_SCRIPT}"
+    end_ts="$(date +%s)"
+    echo "==== DONE ${task} / ${method} in $((end_ts - start_ts))s ===="
+    "${PYTHON_BIN}" "${STATUS_SCRIPT}" --run-group safefairbench
+  done
+done
